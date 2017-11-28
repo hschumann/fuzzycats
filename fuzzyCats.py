@@ -5,7 +5,6 @@ import pandas as pd
 ## read in the data
 crime = pd.read_csv('C:/Users/Owner/Downloads/Crime_Data_Chicago.csv',low_memory = False)
 
-
 ## create latitude and longitude columns separately
 crime['latitude'] = np.array([float(s.split(',')[0][1:]) for s in crime['Location ']])
 crime['longitude'] = np.array([float(s.split(',')[1][:-1]) for s in crime['Location ']])
@@ -13,8 +12,12 @@ crime['longitude'] = np.array([float(s.split(',')[1][:-1]) for s in crime['Locat
 def L2Norm(pt1,pt2):
 	distance = 0.0
 	for var in pt1.columns:
-		distance += (pt1['var'] - pt2['var']) ** 2
-	return distance
+		try:
+			distance += (pt1[var] - pt2[var]) ** 2
+		except:
+			if pt1[var] != pt2[var]:
+				distance += 1
+	return distance ** 0.5
 
 def getCentroids(df):
 	for col in df.columns:
