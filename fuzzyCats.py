@@ -28,24 +28,25 @@ def cleanAge(df):
 	
 ## normalize all the variables
 def normalizeDF(df,columns):
-    df = (df - df.mean()) / (df.max()) 
+    return (df - df.mean()) / (df.max()) 
 	#for col in columns:
 		#df[col] = df[col] / np.max(df[col])
 
 ## distance formulas
 def L2Norm(pt1,pt2):
 	# distance = 0.0
-	return np.sum((pt1.values[0] - pt2.values[0]) ** 2)
+	return np.sqrt(np.sum((pt1.values[0] - pt2.values[0]) ** 2))
 	# for var in pt1.columns:
 	# 	print (pt1[var] - pt2[var])
 	# 	distance += (pt1[var] - pt2[var]) ** 2
 	# return distance ** 0.5
 
 def L1Norm(pt1,pt2):
-	distance = 0.0
-	for var in pt1.columns[0]:
-		distance += abs(pt1[var] - pt2[var])
-	return distance
+	return np.sum(np.absolute((pt1.values[0] - pt2.values[0])))
+	#distance = 0.0
+	#for var in pt1.columns[0]:
+	#	distance += abs(pt1[var] - pt2[var])
+	#return distance
 
 ## getting the new centroids
 def getCentroids(df,k):
