@@ -11,36 +11,37 @@ crime['longitude'] = np.array([float(s.split(',')[1][:-1]) for s in crime['Locat
 
 ## rescale time variable
 def newTimes(df):
-	df['Time Occurred'][np.where(df['Time Occurred'] < 800)] = 2400 - (800 - df['Time Occurred'])
-	df['Time Occurred'][np.where(df['Time Occurred'] >= 800)] = df['Time Occurred'] - 800
-
+	df['Time Occurred'][np.where(df['Time Occurred'] < 800)[0]] = 2400 - (800 - df['Time Occurred'][np.where(df['Time Occurred'] < 800)[0]])
+	df['Time Occurred'][np.where(df['Time Occurred'] >= 800)[0]] = df['Time Occurred'][np.where(df['Time Occurred'] >= 800)[0]] - 800
+	
 ## make sex binary!
 def newSex(df):
-	if df['Victim Sex'] == 'M':
-		df['Sex'] = 1
-	else:
-		df['Sex'] = 0
+	df['Sex'] = np.zeros(len(df['Victim Sex']))
+	df['Sex'][np.where(df['Victim Sex'] == 'M')[0]] = 1
+	df['Sex'][np.where(df['Victim Sex'] == 'F')[0]] = 0
+	df['Sex'][np.where(df['Victim Sex'] == '')[0]] = 0
 
 ## clean age (remove missing values)
 def cleanAge(df):
-	if df['Victim Age'] == '':
-		df['Age'] = np.mean(df['Victim Age'])
+	df['Victim Age'][np.isnan(df['Victim Age'])] = np.mean(df['Victim Age'])
 	
 ## normalize all the variables
 def normalizeDF(df,columns):
 	for col in columns:
 		df[col] = df[col] / np.max(df[col])
 
-## distance formula
+## distance formulas
 def L2Norm(pt1,pt2):
-	distance = 0.0
-	for var in pt1.columns:
-		distance += (pt1[var] - pt2[var]) ** 2
-	return distance ** 0.5
+	# distance = 0.0
+	return np.sum((pt1.values[0] - pt2.values[0]) ** 2)
+	# for var in pt1.columns:
+	# 	print (pt1[var] - pt2[var])
+	# 	distance += (pt1[var] - pt2[var]) ** 2
+	# return distance ** 0.5
 
 def L1Norm(pt1,pt2):
 	distance = 0.0
-	for var in pt1.columns:
+	for var in pt1.columns[0]:
 		distance += abs(pt1[var] - pt2[var])
 	return distance
 
@@ -52,27 +53,38 @@ def getCentroids(df,k):
 	return cent
 
 ## classifies points
-def classifyPoint(centroids,point):
+def classifyPoint(df,centroids,point):
 	smallestDist = np.inf
 	closest = 0
 	i = 0
-	for c in centroids:
+	for c in range(len(centroids)):
 		i += 1
-		temp = L2Norm(c,point)
+		if i%1000 == 0:
+			print ("Hans")
+		temp = L2Norm(centroids.iloc[[c]],df.iloc[[point]])
 		if temp < smallestDist:
 			closest = i
 			smallestDist = temp
+	df.iloc[[point]]['Class'] = closest
+
+# def classifyPoints(df,centroids):
+
 
 ## the big function
 def cluster(df,columns,k):
+	df = df[columns]
 	## pick k random points from the data set
-	firstIDs = np.random.randint(np.len(df),size = k)
+	firstIDs = np.random.randint(len(df),size = k)
 	## set centroids
-	centroids = df[firstIDs,columns]
+	centroids = df.iloc[firstIDs]
+	## run until clusters don't change (hopefully not forever)
 	while True:
-		for obs in df:
-			classifyPoint(centroids,obs)
-		newCentroids = getCentroids(df)
+		# print ("Here")
+		df['Class'] = np.zeros(len(df))
+		centroids['Class'] = np.zeros(len(centroids))
+		for i in range(len(df)):
+			classifyPoint(df,centroids,i)
+		newCentroids = getCentroids(df,columns)
 		if (centroids == newCentroids):
 			break
 		else:
@@ -80,16 +92,16 @@ def cluster(df,columns,k):
 	return df
 
 ## columns we wanna use
-cols = ['Time Occurred','Area ID','Reporting District','Crime Code','Victim Age','Victim Sex','Premise Code','latitude','longitude']
+cols = ['Time Occurred','Area ID','Reporting District','Crime Code','Victim Age','Sex','Premise Code','latitude','longitude']
 
 ## data cleaning
 newTimes(crime)
 newSex(crime)
 cleanAge(crime)
 
+## still need to fix and use the normalizing of variables
+
 cluster(crime,cols,50)
-
-
 
 
 
