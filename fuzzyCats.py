@@ -23,12 +23,14 @@ def newSex(df):
 
 ## clean age (remove missing values)
 def cleanAge(df):
-	df['Victim Age'][np.isnan(df['Victim Age'])] = np.mean(df['Victim Age'])
+    meanAge = np.mean(df['Victim Age'])
+	df['Victim Age'][np.isnan(df['Victim Age'])] = meanAge
 	
 ## normalize all the variables
 def normalizeDF(df,columns):
-	for col in columns:
-		df[col] = df[col] / np.max(df[col])
+    df = (df - df.mean()) / (df.max()) 
+	#for col in columns:
+		#df[col] = df[col] / np.max(df[col])
 
 ## distance formulas
 def L2Norm(pt1,pt2):
@@ -85,6 +87,7 @@ def cluster(df,columns,k):
 		for i in range(len(df)):
 			classifyPoint(df,centroids,i)
 		newCentroids = getCentroids(df,columns)
+        # maybe check if it hits a certain threshold?
 		if (centroids == newCentroids):
 			break
 		else:
